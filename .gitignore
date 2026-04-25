@@ -42,6 +42,6 @@ Thumbs.db
 # Jupyter
 .ipynb_checkpoints/
 
-# Data files (keep sample, ignore large uploads)
+# Data files — ignore uploads, keep sample data
 *.csv
-!sample_data/*.csv
+!sample_data/demo_campaigns.csv
