@@ -2,7 +2,7 @@
 
 # MarketMind
 
-### AI-powered marketing analyst — just upload a CSV and start asking questions
+### AI-powered marketing analyst — upload a CSV, ask questions, get insights
 
 [![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![Streamlit](https://img.shields.io/badge/Streamlit-1.40+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)](https://streamlit.io)
@@ -13,37 +13,62 @@
 
 ---
 
-## The idea
+## What is this?
 
-I built this because every time someone on the team asked "which channel is performing best?" it meant opening spreadsheets, writing pivot tables, and copy-pasting numbers into a slide. That's a lot of effort for a question that should take 10 seconds.
+I built this because every time someone asked "which channel is performing best?" it meant opening spreadsheets, writing pivot tables, and copy-pasting numbers into slides. That's a lot of effort for a question that should take 10 seconds.
 
-MarketMind is a chat interface that sits on top of your data. You upload a CSV, ask questions in plain English, and get back numbers, trends, and charts. No SQL, no dashboards, no learning curve.
+MarketMind is a chat interface that sits on top of your data. You upload a CSV, ask questions in plain English, and get back numbers, trends, and interactive charts — no SQL, no dashboards, no learning curve.
 
 ---
 
-## What it looks like
+## Demo
+
+**Conversation example with the included sample dataset:**
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│  📊 MarketMind Agent                                        │
-├──────────────────┬──────────────────────────────────────────┤
-│                  │  💬 Chat  │  📊 Charts                   │
-│  API Key         ├──────────────────────────────────────────┤
-│  ──────────      │                                          │
-│  Upload CSV      │  You: Which channel has the best ROI?    │
-│  ──────────      │                                          │
-│  Loaded:         │  MarketMind: Email leads with an avg     │
-│  campaigns.csv   │  ROI of 8.3×, followed by Social        │
-│                  │  Media (6.2×) and Affiliate (7.0×).      │
-│  What I can do:  │  Display ads trail significantly at      │
-│  📈 Analyze data │  1.2× — worth reviewing that budget.     │
-│  📣 Campaign KPIs│                                          │
-│  🔍 Competitors  │  > Ask a follow-up...                    │
-│  📝 Reports      │                                          │
-└──────────────────┴──────────────────────────────────────────┘
+You:   "Which channel has the best ROI?"
+
+📊:    Email leads at 8.3× average ROI, closely followed by
+       Affiliate (7.0×) and Social Media (6.2×).
+       Display ads are underperforming at just 1.2× — worth
+       reviewing that budget allocation before next quarter.
+
+You:   "Which region should we focus on?"
+
+📊:    North generates the highest total revenue ($98,500)
+       with Email and Social driving most of it.
+       West is underinvested — highest ROI-per-dollar but
+       only 18% of total budget allocated there.
+
+You:   "Generate a report I can share with my team"
+
+📊:    # Q2 Campaign Performance Report
+       Generated: 2026-04-26 11:00
+       ...
 ```
 
-Switch to the **Charts tab** and you get interactive Plotly visualizations — bar charts, category breakdowns, correlation heatmaps — automatically built from whatever CSV you uploaded.
+---
+
+## Charts — built automatically from your data
+
+Upload any CSV and switch to the **📊 Charts** tab:
+
+**ROI by Channel**
+![ROI by Channel](docs/chart_roi_by_channel.png)
+
+**Budget vs Revenue — sized by Conversions**
+![Budget vs Revenue](docs/chart_budget_vs_revenue.png)
+
+**CTR & Conversions by Campaign Type**
+![CTR by Campaign Type](docs/chart_ctr_by_type.png)
+
+**Budget Distribution by Channel**
+![Budget Share](docs/chart_budget_share.png)
+
+**Revenue vs Budget by Region**
+![Region Performance](docs/chart_region.png)
+
+> All charts are interactive in the app — hover for values, click legend to filter.
 
 ---
 
@@ -51,12 +76,12 @@ Switch to the **Charts tab** and you get interactive Plotly visualizations — b
 
 | Feature | What it does |
 |---|---|
-| **CSV analysis** | Parses any tabular data — auto-detects comma or semicolon delimiters, handles UTF-8 BOM |
+| **CSV analysis** | Parses any tabular data — auto-detects `,` or `;` delimiters, handles UTF-8 BOM |
 | **Campaign KPIs** | Calculates CTR, CPC, CPA, ROAS from your column names automatically |
-| **Competitor research** | Live DuckDuckGo search for market intel, pricing, trends |
-| **Report generation** | Structured Markdown reports you can paste straight into a doc |
-| **Interactive charts** | Bar charts, heatmaps, categorical breakdowns — all from Plotly |
-| **Conversation memory** | Remembers the full conversation so follow-up questions work naturally |
+| **Interactive charts** | Bar charts, scatter plots, heatmaps, pie charts — built from your actual data |
+| **Competitor research** | Live web search for market intel, pricing, industry trends |
+| **Report generation** | Structured Markdown reports ready to share |
+| **Conversation memory** | Follow-up questions work — it remembers the full context |
 
 ---
 
@@ -64,15 +89,15 @@ Switch to the **Charts tab** and you get interactive Plotly visualizations — b
 
 ```mermaid
 flowchart TD
-    U([User uploads CSV + asks question]) --> A[app.py]
-    A -->|Pre-analyze locally| S[analyze_sales\npandas stats]
-    S -->|compact JSON ~5KB| A
-    A -->|user message + JSON summary| CLAUDE[Claude Sonnet 4.6]
+    U([User uploads CSV + types question]) --> A[app.py]
+    A -->|Run locally with pandas| S[analyze_sales\nstats summary ~5KB]
+    S --> A
+    A -->|message + compact JSON| CLAUDE[Claude Sonnet 4.6]
 
-    CLAUDE -->|tool_use| T{Which tool?}
-    T -->|data question| TS[analyze_sales]
+    CLAUDE -->|tool_use| T{Which tool needed?}
+    T -->|data stats| TS[analyze_sales]
     T -->|campaign KPIs| TC[analyze_campaign]
-    T -->|market research| TR[research_competitors]
+    T -->|market research| TR[research_competitors\nDuckDuckGo]
     T -->|final output| TG[generate_report]
 
     TS --> CLAUDE
@@ -80,10 +105,11 @@ flowchart TD
     TR --> CLAUDE
     TG --> CLAUDE
 
-    CLAUDE -->|end_turn| R([Text response + Charts])
+    CLAUDE -->|end_turn| R([Text response shown in Chat tab])
+    A -->|same analysis data| CH([Charts rendered in Charts tab])
 ```
 
-The key design decision: the raw CSV never gets sent to the API. It's analyzed locally with pandas first, and only the compact statistics (~5KB) go to Claude. That's what keeps it fast even on large files.
+The raw CSV is **never sent to the API**. It's analyzed locally first with pandas, and only the compact statistics go to Claude. That's what keeps it fast even on large files.
 
 ---
 
@@ -92,21 +118,21 @@ The key design decision: the raw CSV never gets sent to the API. It's analyzed l
 ```
 MarketMind/
 │
-├── app.py                  # Streamlit UI — chat, charts, sidebar, session management
-├── agent.py                # Claude agentic loop — tool dispatch, history sanitization
+├── app.py                   # Streamlit UI — chat, charts, sidebar, session state
+├── agent.py                 # Claude agentic loop — tool dispatch, history management
 │
 ├── tools/
-│   ├── sales.py            # CSV parser + pandas stats (mean, std, correlations, groups)
-│   ├── campaign.py         # Marketing KPI calculator (CTR, CPC, CPA, ROAS)
-│   ├── research.py         # DuckDuckGo web search wrapper
-│   └── report.py           # Markdown / plain-text report builder
+│   ├── sales.py             # CSV parser + pandas stats (mean, std, correlations)
+│   ├── campaign.py          # KPI calculator — CTR, CPC, CPA, ROAS
+│   ├── research.py          # DuckDuckGo web search
+│   └── report.py            # Markdown / plain-text report builder
 │
 ├── sample_data/
-│   └── demo_campaigns.csv  # 15-row sample to try immediately
+│   └── demo_campaigns.csv   # 15-row sample — try it immediately, no data needed
 │
+├── docs/                    # Chart screenshots for this README
 ├── requirements.txt
-├── .gitignore
-└── .env                    # Your API key — never committed
+└── .env                     # Your API key — never committed
 ```
 
 ---
@@ -126,15 +152,15 @@ cd MarketMind
 pip install -r requirements.txt
 ```
 
-### 3. Set up your API key
+### 3. Add your API key
 
-Create a `.env` file:
+Create a `.env` file in the project root:
 
 ```
 ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
 ```
 
-Get a key at [console.anthropic.com](https://console.anthropic.com) → API Keys. A $5 credit is plenty to get started.
+Get a free key at [console.anthropic.com](https://console.anthropic.com) → API Keys. $5 credit is more than enough to get started.
 
 ### 4. Run
 
@@ -150,49 +176,44 @@ Opens at `http://localhost:8501`
 
 There's a 15-campaign demo CSV in `sample_data/demo_campaigns.csv`. Upload it and try:
 
-- *"Which channel has the highest ROI?"*
-- *"What's the average CTR across all campaigns?"*
-- *"Compare Social Media vs Email performance"*
-- *"Which region should we focus on next quarter?"*
-- *"Generate a summary report"*
+```
+"Analyze this dataset and give me the key insights"
+"Which channel has the highest ROI?"
+"Where are we wasting budget?"
+"Compare Email vs Social Media performance"
+"Which region should we invest more in?"
+"Generate a performance report"
+```
 
 ---
 
-## Example questions
+## What questions can you ask?
 
-**For campaign data:**
-- *"Analyze this dataset and give me the key insights"*
+**About your data:**
 - *"Which campaign type converts best?"*
-- *"Where are we wasting budget?"*
-- *"Show me the top 3 campaigns by revenue"*
+- *"What's the correlation between budget and revenue?"*
+- *"Show me the top 5 campaigns by ROI"*
+- *"Where are the biggest outliers?"*
 
-**For market research (no CSV needed):**
-- *"What are the latest trends in email marketing?"*
-- *"How does HubSpot price its plans?"*
+**About the market (no CSV needed):**
+- *"What are current trends in email marketing?"*
+- *"How does Mailchimp compare to HubSpot on pricing?"*
 
 **For reports:**
-- *"Generate a formal performance report I can share with stakeholders"*
+- *"Generate a formal report I can share with stakeholders"*
 
 ---
 
 ## Tech stack
 
-| | Tool | Why |
+| Layer | Tool | Reason |
 |---|---|---|
-| UI | Streamlit | Fast to build, looks decent out of the box |
-| AI | Claude Sonnet 4.6 | Best for reasoning over structured data |
-| Data | pandas + numpy | Standard — no reason to use anything else |
+| UI | Streamlit | Fast to build, clean out of the box |
+| AI | Claude Sonnet 4.6 | Best reasoning on structured data |
+| Data | pandas + numpy | Standard — nothing to debate here |
 | Charts | Plotly Express | Interactive with one line of code |
-| Search | duckduckgo-search | No API key required |
+| Web search | duckduckgo-search | No API key needed |
 | Config | python-dotenv | Simple `.env` file management |
-
----
-
-## Supported CSV formats
-
-- Comma-separated (`,`) and semicolon-separated (`;`)
-- UTF-8 with or without BOM characters
-- Marketing data, sales reports, product catalogs, survey results — any tabular data works
 
 ---
 
@@ -202,4 +223,4 @@ MIT — use it, fork it, build on it.
 
 ---
 
-*Built for people who just want answers from their data, not another tool to learn.*
+*Built for people who just want answers from their data.*

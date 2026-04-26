@@ -45,3 +45,6 @@ Thumbs.db
 # Data files — ignore uploads, keep sample data
 *.csv
 !sample_data/demo_campaigns.csv
+
+# Keep docs/screenshots
+!docs/
